@@ -83,8 +83,8 @@ make backend-logs   # View backend container logs
 
 # Testing
 make test           # Run PHP tests in the backend container
-make test-fe  # Run frontend tests
-make test-be   # Run backend tests
+make test-fe        # Run frontend tests
+make test-be        # Run backend tests
 
 ```
 
