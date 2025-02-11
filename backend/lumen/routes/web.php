@@ -19,17 +19,13 @@ $router->get('/', function () use ($router) {
 $router->group(['prefix' => 'api/v1'], function () use ($router) {
     $router->post('auth/register', [AuthController::class, 'register']);
     $router->post('auth/login', [AuthController::class, 'login']);
+    $router->get('auth/me', [AuthController::class, 'me']);
+    $router->post('auth/logout', [AuthController::class, 'logout']);
     
-    // Protected Routes
-    $router->group(['middleware' => 'auth'], function () use ($router) {
-        $router->get('auth/me', [AuthController::class, 'me']);
-        $router->post('auth/logout', [AuthController::class, 'logout']);
-        
-        // Posts Routes
-        $router->get('posts', [GetPaginatedPostController::class, '__invoke']);
-        $router->post('posts', [CreatePostController::class, '__invoke']);
-        $router->get('posts/{id}', [GetPostDetailsController::class, '__invoke']);
-        $router->put('posts/{id}', [UpdatePostController::class, '__invoke']);
-        $router->delete('posts/{id}', [DeletePostController::class, '__invoke']);
-    });
+    // Posts Routes
+    $router->get('posts', GetPaginatedPostController::class);
+    $router->post('posts', CreatePostController::class);
+    $router->get('posts/{id}', GetPostDetailsController::class);
+    $router->put('posts/{id}', UpdatePostController::class);
+    $router->delete('posts/{id}', DeletePostController::class);
 });

@@ -2,21 +2,22 @@
 
 namespace App\Http\Controllers\Post;
 
-use App\Http\{
-    Controllers\Controller,
-    Resources\PostResource
-};
+use App\Http\Controllers\Controller;
+use App\Http\Resources\PostResource;
 use App\Repositories\RepoService;
-use App\Core\ApiResponse;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 
 class GetPostDetailsController extends Controller
 {
-    public function __invoke(int $postId, RepoService $repoService, Request $request): JsonResponse
+    public function __invoke(Request $request, RepoService $repoService, $id): JsonResponse
     {
-        $post = $repoService->post()->findByIdentifier(['id' => $postId, 'user_id' =>  $request->user()->id]);
+        $post = $repoService->post()->find($id);
 
-        return ApiResponse::success(new PostResource($post));
+        if (!$post) {
+            return response()->json(['message' => 'Post not found'], 404);
+        }
+
+        return response()->json(new PostResource($post));
     }
 }

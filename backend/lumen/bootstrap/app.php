@@ -64,14 +64,11 @@ $app->routeMiddleware([
 |--------------------------------------------------------------------------
 */
 
+// Register Service Providers
 $app->register(App\Providers\AppServiceProvider::class);
 $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
 $app->register(Illuminate\Redis\RedisServiceProvider::class);
 $app->register(App\Providers\RepositoryServiceProvider::class);
-$app->register(Illuminate\Redis\RedisServiceProvider::class);
-
-// Register Cache Commands
-$app->singleton('Illuminate\Contracts\Console\Kernel', \Laravel\Lumen\Console\Kernel::class);
 $app->register(Illuminate\Cache\CacheServiceProvider::class);
 
 /*
@@ -81,7 +78,7 @@ $app->register(Illuminate\Cache\CacheServiceProvider::class);
 */
 
 $app->router->group([
-    'namespace' => 'App\Http\Controllers',
+    'namespace' => null, // Remove the default namespace to use fully qualified class names
 ], function ($router) {
     require __DIR__.'/../routes/web.php';
 });

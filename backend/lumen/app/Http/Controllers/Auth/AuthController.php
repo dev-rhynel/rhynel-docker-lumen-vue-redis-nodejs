@@ -25,20 +25,15 @@ class AuthController extends Controller
             'password' => Hash::make($request->input('password')),
         ]);
 
-        return response()->json([
+        return response()->json([   
             'message' => 'Successfully registered',
             'user' => $user
         ], 201);
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $this->validate($request, [
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
-
-        $credentials = $request->only(['email', 'password']);
+        $credentials = $request->handleAuthentication();
 
         if (!$token = Auth::attempt($credentials)) {
             return response()->json(['message' => 'Unauthorized'], 401);

@@ -4,12 +4,13 @@ namespace App\Repositories;
 
 use App\Interfaces\PostRepositoryInterface;
 use App\Models\Post;
+use Illuminate\Support\Facades\Auth;
 
 class PostRepository implements PostRepositoryInterface
 {
     private function model(): \Illuminate\Database\Eloquent\Builder
     {
-        return Post::where('user_id', Auth::id());
+        return Post::query();
     }    
 
     public function index(array $data, array $identifier)
@@ -19,28 +20,21 @@ class PostRepository implements PostRepositoryInterface
         if (isset($data['sort_by']) && isset($data['sort_direction'])) {
             $posts = $posts->orderBy($data['sort_by'], $data['sort_direction']);
         }
-        if (isset($data['filters'])) {
-            $filters = collect($data['filters'])->map(function ($value, $key) {
-                return [
-                    'column' => $key,
-                    'value' => $value,
-                ];
-            });
 
-            foreach ($filters as $filter) {
-                $posts->where(
-                    $filter['column'],
-                    $filter['value']
-                );
+        if (isset($data['filters']) && is_array($data['filters'])) {
+            foreach ($data['filters'] as $key => $value) {
+                $posts->where($key, $value);
             }
-
         }
 
         if (isset($data['search'])) {
-            $posts = $posts->orWhere('title', 'ilike', "%{$data['search']}%");
+            $posts = $posts->where(function($query) use ($data) {
+                $query->where('title', 'like', "%{$data['search']}%")
+                      ->orWhere('content', 'like', "%{$data['search']}%");
+            });
         }
 
-        return $posts->paginate($data['per_page'] ?? 10);
+        return $posts->paginate($data['itemsPerPage'] ?? 10);
     }
 
     public function create(array $data)
@@ -52,7 +46,7 @@ class PostRepository implements PostRepositoryInterface
 
     public function find(int $id)
     {
-        return $this->getModel()->findOrFail($id);
+        return $this->model()->find($id);
     }
 
     public function update(array $identifier, array $updateData): Post

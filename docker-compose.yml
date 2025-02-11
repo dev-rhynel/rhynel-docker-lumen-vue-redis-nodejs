@@ -12,34 +12,31 @@ services:
       - ./backend/lumen:/app/backend-lumen
       - ./backend/node:/app/backend-node
     depends_on:
-      - mysql_db
-      - redis_cache
+      mysql_db:
+        condition: service_healthy
+      redis_cache:
+        condition: service_started
     environment:
       # Lumen environment variables
       - APP_NAME=LumenMicroservice
       - APP_ENV=local
-      - APP_KEY=base64:sPqM8kkhL+HJEj1P9nYPOQO2VPxVy+Rw+hdVTEX1M5Y=
+      - APP_KEY=${APP_KEY:-base64:sPqM8kkhL+HJEj1P9nYPOQO2VPxVy+Rw+hdVTEX1M5Y=}
       - APP_DEBUG=true
       - APP_URL=http://localhost:8000
       - APP_TIMEZONE=UTC
       - DB_CONNECTION=mysql
       - DB_HOST=mysql_db
       - DB_PORT=3306
-      - DB_DATABASE=microservices
+      - DB_DATABASE=lumen_db
       - DB_USERNAME=root
-      - DB_PASSWORD=root
-      - CACHE_DRIVER=redis
-      - QUEUE_CONNECTION=redis
-      - REDIS_HOST=redis_cache
-      - REDIS_PORT=6379
-      - JWT_SECRET=9Zn5GgWDEwJBhnrMmFxBJHudKbP4vNYc
-      - JWT_TTL=60
-      - JWT_REFRESH_TTL=20160
-      # Node.js environment variables
-      - NODE_ENV=development
+      - DB_PASSWORD=1265
+      - CACHE_DRIVER=file
+      - QUEUE_CONNECTION=sync
       # Redis configuration
       - REDIS_HOST=redis_cache
       - REDIS_PORT=6379
+      # Node.js environment variables
+      - NODE_ENV=development
     networks:
       - app-network
 
@@ -61,13 +58,19 @@ services:
     container_name: mysql_db
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: microservices
+      MYSQL_ROOT_PASSWORD: 1265
+      MYSQL_DATABASE: lumen_db
+      MYSQL_ROOT_HOST: "%"
     volumes:
       - mysql_data:/var/lib/mysql
     ports:
       - "3306:3306"
     command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p1265"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     networks:
       - app-network
 

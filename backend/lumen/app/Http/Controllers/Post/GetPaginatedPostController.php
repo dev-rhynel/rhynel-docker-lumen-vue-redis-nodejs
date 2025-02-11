@@ -24,7 +24,8 @@ class GetPaginatedPostController extends Controller
             'itemsPerPage',
         ]);
 
-        $posts = $repoService->post()->index($selected, ['user_id' => $request->user()->id]);
+        // Since auth is disabled, get all posts without user filtering
+        $posts = $repoService->post()->index($selected, []);
 
         return PostResource::collection($posts);
     }
