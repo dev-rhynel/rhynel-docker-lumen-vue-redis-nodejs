@@ -7,6 +7,7 @@ use App\Http\Resources\PostResource;
 use App\Repositories\RepoService;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use App\Core\ApiResponse;
 
 class GetPostDetailsController extends Controller
 {
@@ -15,9 +16,9 @@ class GetPostDetailsController extends Controller
         $post = $repoService->post()->find($id);
 
         if (!$post) {
-            return response()->json(['message' => 'Post not found'], 404);
+            return ApiResponse::error('Post not found', 404);
         }
 
-        return response()->json(new PostResource($post));
+        return ApiResponse::success(new PostResource($post));
     }
 }

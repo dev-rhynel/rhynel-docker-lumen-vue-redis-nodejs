@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Auth;
 
-use Illuminate\Foundation\Http\FormRequest;
+use Laravel\Lumen\Http\Request;
 use Illuminate\Validation\Rules\Password;
 
-class RegisterRequest extends FormRequest
+class RegisterRequest extends Request
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -18,22 +18,22 @@ class RegisterRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\Rule|array|string>
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
         return [
-            'email' => 'required|email|unique:users,email|max:255',
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
             'password' => [
                 'required',
-                Password::min(8)
-                    ->letters()
-                    ->mixedCase()
-                    ->numbers()
-                    ->symbols()
-                    ->uncompromised()
+                'string',
+                'min:8',
+                'regex:/[a-z]/',      // at least one lowercase letter
+                'regex:/[A-Z]/',      // at least one uppercase letter
+                'regex:/[0-9]/',      // at least one number
+                'regex:/[@$!%*#?&]/', // at least one special character
             ],
         ];
     }
@@ -43,8 +43,12 @@ class RegisterRequest extends FormRequest
      */
     protected function prepareForValidation()
     {
-        $this->merge([
-            'email' => strtolower($this->email)
-        ]);
-    }
+        $data = json_decode($this->getContent(), true) ?? [];
+        $this->merge($data);
+        if ($this->has('email')) {
+            $this->merge([
+                'email' => strtolower($this->input('email'))
+            ]);
+        }
+    }   
 }

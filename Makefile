@@ -1,11 +1,14 @@
-APP_CONTAINER = rhynel-technical-test-lumen-1
+APP_CONTAINER = microservices_backend
 DB_CONTAINER = rhynel-technical-test-lumen-db-testing-1
+FRONTEND_CONTAINER = microservices_frontend
+
+.PHONY: start stop build test frontend-logs backend-logs
 
 start:
 	docker compose up -d
 
 build:
-	docker buildx build --platform linux/amd64 -t rhynel-technical-test-lumen .
+	docker compose build
 
 stop:
 	docker compose down
@@ -15,6 +18,15 @@ bash:
 
 sql:
 	docker exec -it $(DB_CONTAINER) bash
+
+frontend-bash:
+	docker exec -it $(FRONTEND_CONTAINER) sh
+
+frontend-logs:
+	docker compose logs -f frontend
+
+backend-logs:
+	docker compose logs -f backend
 
 test:
 	docker exec $(APP_CONTAINER) php artisan test

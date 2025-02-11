@@ -4,7 +4,6 @@ namespace App\Repositories;
 
 use App\Interfaces\PostRepositoryInterface;
 use App\Models\Post;
-use Illuminate\Support\Facades\Auth;
 
 class PostRepository implements PostRepositoryInterface
 {
@@ -39,7 +38,7 @@ class PostRepository implements PostRepositoryInterface
 
     public function create(array $data)
     {
-        $post = $this->getModel()->create($data);
+        $post = $this->model()->create($data);
         return $post->refresh();
     }
 
@@ -49,17 +48,22 @@ class PostRepository implements PostRepositoryInterface
         return $this->model()->find($id);
     }
 
+    public function findByIdentifier(array $identifier)
+    {
+        return $this->model()->where($identifier)->firstOrFail();
+    }
+
     public function update(array $identifier, array $updateData): Post
     {
-        $post = $this->getModel()->where($identifier)->firstOrFail();
+        $post = $this->findByIdentifier($identifier);
         $post->update($updateData);
         return $post->refresh();
     }
 
-    public function delete(array $identifier, int $taskId): void
+    public function delete(array $identifier, int $postId): void
     {
         $post = $this->findByIdentifier($identifier);
 
-        $post->getModel()->delete($taskId);
+        $post->getModel()->delete($postId);
     }
 }

@@ -64,9 +64,20 @@ $app->routeMiddleware([
 |--------------------------------------------------------------------------
 */
 
-// Register Service Providers
 $app->register(App\Providers\AppServiceProvider::class);
 $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
+
+/*
+|--------------------------------------------------------------------------
+| Register Routes
+|--------------------------------------------------------------------------
+*/
+
+$app->router->group([
+    'namespace' => 'App\Http\Controllers',
+], function ($router) {
+    require __DIR__.'/../routes/web.php';
+});
 $app->register(Illuminate\Redis\RedisServiceProvider::class);
 $app->register(App\Providers\RepositoryServiceProvider::class);
 $app->register(Illuminate\Cache\CacheServiceProvider::class);

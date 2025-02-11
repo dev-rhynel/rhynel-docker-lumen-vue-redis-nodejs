@@ -10,6 +10,8 @@ interface PostRepositoryInterface
 
     public function find(int $id);
 
+    public function findByIdentifier(array $identifier);
+
     public function update(array $identifier, array $updateData);
 
     public function delete(array $identifier, int $postId);

@@ -2,63 +2,70 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\Models\User;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
+use App\Repositories\RepoService;
+use App\Core\ApiResponse;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    protected $repoService;
+
+    public function __construct(RepoService $repoService)
     {
-        $registrationData = $request->only([
-            'first_name',
-            'last_name',
-            'email',
+        $this->repoService = $repoService;
+    }
+
+    public function register(RegisterRequest $request)
+    {
+        $data = json_decode($request->getContent(), true) ?? [];
+        $request->merge($data);
+
+        $this->validate($request, $request->rules());
+
+        $user = $this->repoService->user()->create([
+            'name' => $request->first_name . ' ' . $request->last_name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
         ]);
 
-        $user = User::create([
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'password' => Hash::make($request->input('password')),
-        ]);
+        $token = Auth::login($user);
 
-        return response()->json([   
-            'message' => 'Successfully registered',
-            'user' => $user
-        ], 201);
+        return ApiResponse::success([
+            'user' => $user,
+            'token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => Auth::factory()->getTTL() * 60
+        ], 'Successfully registered', 201);
     }
 
     public function login(LoginRequest $request)
     {
-        $credentials = $request->handleAuthentication();
+        $credentials = $request->only(['email', 'password']);
 
         if (!$token = Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Unauthorized'], 401);
+            return ApiResponse::error('Invalid credentials', 401);
         }
 
-        return $this->respondWithToken($token);
+        return ApiResponse::success([
+            'message' => 'Successfully logged in',
+            'token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => Auth::factory()->getTTL() * 60
+        ], 'Login successful', 200);
     }
 
     public function me()
     {
-        return response()->json(Auth::user());
+        return ApiResponse::success(Auth::user(), 'User retrieved successfully', 200);
     }
 
     public function logout()
     {
         Auth::logout();
-        return response()->json(['message' => 'Successfully logged out']);
-    }
-
-    protected function respondWithToken($token)
-    {
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => Auth::factory()->getTTL() * 60
-        ]);
+        return ApiResponse::success('Successfully logged out', 'Logout successful', 200);
     }
 }

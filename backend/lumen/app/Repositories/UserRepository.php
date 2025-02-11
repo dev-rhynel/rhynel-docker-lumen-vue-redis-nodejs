@@ -7,23 +7,9 @@ use App\Models\User;
 
 class UserRepository implements UserRepositoryInterface
 {
-    private function model(bool $useSelect = false): \Illuminate\Database\Eloquent\Builder
+    private function model(): \Illuminate\Database\Eloquent\Builder
     {
-        if ($useSelect) {
-            return User::select([
-                'first_name',
-                'last_name',
-                'username',
-                'email',
-                'provider',
-                'avatar',
-                'is_activated',
-                'bio',
-                'id',
-            ]);
-        }
-
-        return new User();
+        return User::query();
     }
 
     public function create(array $data)
@@ -34,5 +20,10 @@ class UserRepository implements UserRepositoryInterface
     public function find($id)
     {
         return $this->model()->find($id);
+    }
+
+    public function findByIdentifier(array $identifier)
+    {
+        return $this->model()->where($identifier)->first();
     }
 }
