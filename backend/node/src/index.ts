@@ -1,9 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import { sequelize } from './config/database';
 import { createLogger, format, transports } from 'winston';
-import redisClient from './config/redis';
-import postsRouter from './routes/posts';
+import RedisService from './config/redis';
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -25,29 +23,68 @@ const logger = createLogger({
 app.use(cors());
 app.use(express.json());
 
-// Routes
-app.use('/api/cache-test', postsRouter);
+// Redis endpoints
+app.post('/api/cache/set', async (req, res) => {
+    try {
+        const { key, value, expireSeconds } = req.body;
+        if (!key || value === undefined) {
+            return res.status(400).json({ error: 'Key and value are required' });
+        }
+        
+        const result = await RedisService.set(key, value, expireSeconds);
+        res.json({ success: true, result });
+    } catch (error) {
+        logger.error('Error in /api/cache/set:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.get('/api/cache/get/:key', async (req, res) => {
+    try {
+        const { key } = req.params;
+        const value = await RedisService.get(key);
+        
+        if (value === null) {
+            return res.status(404).json({ error: 'Key not found' });
+        }
+        
+        res.json({ value });
+    } catch (error) {
+        logger.error('Error in /api/cache/get:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+app.delete('/api/cache/delete/:key', async (req, res) => {
+    try {
+        const { key } = req.params;
+        const result = await RedisService.delete(key);
+        res.json({ success: result > 0 });
+    } catch (error) {
+        logger.error('Error in /api/cache/delete:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
 
 // Health check endpoint
-app.get('/health', async (req, res) => {
-    try {
-        // Check Redis connection
-        await redisClient.ping();
+app.get('/health', (req, res) => {
+    res.json({ status: 'ok', redis: RedisService.getInstance().status });
+});
 
-        res.json({ 
-            status: 'ok',
-            redis: 'connected'
-        });
-    } catch (error) {
-        logger.error('Health check failed:', error);
-        res.status(500).json({ 
-            status: 'error',
-            message: 'Health check failed'
-        });
-    }
+// Error handling middleware
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    logger.error('Unhandled error:', err);
+    res.status(500).json({ error: 'Internal server error' });
 });
 
 // Start server
 app.listen(port, () => {
-    logger.info(`Node.js Redis caching service listening at http://localhost:${port}`);
+    logger.info(`Server running on port ${port}`);
+});
+
+// Handle process termination
+process.on('SIGTERM', () => {
+    logger.info('SIGTERM received. Shutting down gracefully...');
+    RedisService.getInstance().quit();
+    process.exit(0);
 });

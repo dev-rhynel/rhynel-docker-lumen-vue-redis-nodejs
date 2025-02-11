@@ -2,7 +2,6 @@
 
 /** @var \Laravel\Lumen\Routing\Router $router */
 use App\Http\Controllers\Auth\AuthController;
-
 use App\Http\Controllers\Post\CreatePostController;
 use App\Http\Controllers\Post\GetPaginatedPostController;
 use App\Http\Controllers\Post\GetPostDetailsController;
@@ -18,19 +17,19 @@ $router->get('/', function () use ($router) {
 
 // Auth Routes
 $router->group(['prefix' => 'api/v1'], function () use ($router) {
-    $router->post('auth/register', AuthController::class . '@register');
-    $router->post('auth/login', AuthController::class . '@login');
+    $router->post('auth/register', [AuthController::class, 'register']);
+    $router->post('auth/login', [AuthController::class, 'login']);
     
     // Protected Routes
     $router->group(['middleware' => 'auth'], function () use ($router) {
-        $router->get('auth/me', AuthController::class . '@me');
-        $router->post('auth/logout', AuthController::class . '@logout');
+        $router->get('auth/me', [AuthController::class, 'me']);
+        $router->post('auth/logout', [AuthController::class, 'logout']);
         
         // Posts Routes
-        $router->get('posts', GetPaginatedPostController::class);
-        $router->post('posts', CreatePostController::class);
-        $router->get('posts/{id}', GetPostDetailsController::class);
-        $router->put('posts/{id}', UpdatePostController::class);
-        $router->delete('posts/{id}', DeletePostController::class);
+        $router->get('posts', [GetPaginatedPostController::class, '__invoke']);
+        $router->post('posts', [CreatePostController::class, '__invoke']);
+        $router->get('posts/{id}', [GetPostDetailsController::class, '__invoke']);
+        $router->put('posts/{id}', [UpdatePostController::class, '__invoke']);
+        $router->delete('posts/{id}', [DeletePostController::class, '__invoke']);
     });
 });

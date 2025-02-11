@@ -3,9 +3,9 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
-use App\Core\Resources\AppJsonResource;
+use Illuminate\Http\Resources\Json\JsonResource;
 
-class UserResource extends AppJsonResource
+class UserResource extends JsonResource
 {
     /**
     * Transform the resource into an array.
