@@ -83,6 +83,9 @@ make backend-logs   # View backend container logs
 
 # Testing
 make test           # Run PHP tests in the backend container
+make test-fe  # Run frontend tests
+make test-be   # Run backend tests
+
 ```
 
 These commands simplify common development tasks and container management operations.
@@ -186,19 +189,6 @@ Each endpoint includes:
 - Request body schemas
 - Response schemas
 - Authentication requirements
-
-### Local Documentation
-When running the backend server, additional API documentation can be found at:
-- Lumen Swagger UI: `/api/documentation`
-- Node.js API docs: `/api/docs`
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/my-new-feature`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin feature/my-new-feature`
-5. Submit a pull request
 
 ## License
 

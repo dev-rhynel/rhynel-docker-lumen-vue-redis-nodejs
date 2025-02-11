@@ -5,8 +5,8 @@ import type {Registry, AnyModels, AnyFactories, ModelInstance} from 'miragejs/-t
 interface User extends ModelInstance {
   id: string
   email: string
-  firstName: string
-  lastName: string
+  first_name: string
+  last_name: string
   token: string
 }
 
@@ -38,8 +38,8 @@ export function makeServer({environment = 'development'} = {}) {
       server.create('user', {
         id: '1',
         email: 'test@example.com',
-        firstName: 'Test',
-        lastName: 'User',
+        first_name: 'Test',
+        last_name: 'User',
         token: 'fake-jwt-token',
       })
 
@@ -48,16 +48,16 @@ export function makeServer({environment = 'development'} = {}) {
         id: `${i + 1}`,
         title: `Post ${i + 1}`,
         content: `This is the content for post ${i + 1}. It contains some sample text to demonstrate the post content.`,
-        userId: '1',
-        createdAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-        updatedAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-      }))
+        user_id: '1',
+        created_at: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
+        updated_at: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
+      } as any))
     },
 
     routes() {
       this.namespace = 'api'
 
-      this.post('/account/auth/login', (schema: AppSchema, request) => {
+      this.post('/auth/login', (schema: AppSchema, request) => {
         const attrs = JSON.parse(request.requestBody)
         const user = schema.findBy('user', {email: attrs.email})
 
@@ -69,8 +69,8 @@ export function makeServer({environment = 'development'} = {}) {
               user: {
                 id: user.id,
                 email: user.email,
-                firstName: user.firstName,
-                lastName: user.lastName,
+                first_name: user.first_name,
+                last_name: user.last_name,
               },
             },
           }
@@ -86,7 +86,7 @@ export function makeServer({environment = 'development'} = {}) {
         )
       })
 
-      this.post('/account/auth/register', (schema: AppSchema, request) => {
+      this.post('/auth/register', (schema: AppSchema, request) => {
         const attrs = JSON.parse(request.requestBody)
         const existingUser = schema.findBy('user', {email: attrs.email})
 
@@ -113,8 +113,8 @@ export function makeServer({environment = 'development'} = {}) {
             user: {
               id: user.id,
               email: user.email,
-              firstName: user.firstName,
-              lastName: user.lastName,
+              first_name: user.first_name,
+              last_name: user.last_name,
             },
           },
         }

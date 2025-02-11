@@ -38,6 +38,7 @@
               v-model="first_name"
               required
               placeholder="Enter your first name"
+              :error="first_name_error"
             />
           </div>
 
@@ -49,6 +50,7 @@
               v-model="last_name"
               required
               placeholder="Enter your last name"
+              :error="last_name_error"
             />
           </div>
 
@@ -60,6 +62,7 @@
               v-model="email"
               required
               placeholder="Enter your email"
+              :error="email_error"
             />
           </div>
 
@@ -71,6 +74,7 @@
               v-model="password"
               required
               placeholder="Enter your password"
+              :error="password_error"
             />
           </div>
 
@@ -82,6 +86,7 @@
               v-model="confirmPassword"
               required
               placeholder="Confirm your password"
+              :error="confirmPassword_error"
             />
           </div>
 
@@ -133,18 +138,67 @@ const confirmPassword = ref('')
 const loading = ref(false)
 const error = ref(false)
 const errorMessage = ref('')
+const first_name_error = ref('')
+const last_name_error = ref('')
+const email_error = ref('')
+const password_error = ref('')
+const confirmPassword_error = ref('')
 
 const handleRegister = async () => {
+  let isValid = true
+
+  if (!first_name.value) {
+    first_name_error.value = 'First name is required'
+    isValid = false
+  } else {
+    first_name_error.value = ''
+  }
+
+  if (!last_name.value) {
+    last_name_error.value = 'Last name is required'
+    isValid = false
+  } else {
+    last_name_error.value = ''
+  }
+
+  if (!email.value) {
+    email_error.value = 'Email is required'
+    isValid = false
+  } else if (!/^[^\s@]+@[^\s@]+\\.[^\s@]+$/.test(email.value)) {
+    email_error.value = 'Invalid email address'
+    isValid = false
+  } else {
+    email_error.value = ''
+  }
+
+  if (!password.value) {
+    password_error.value = 'Password is required'
+    isValid = false
+  } else if (password.value.length < 6) {
+    password_error.value = 'Password must be at least 6 characters'
+    isValid = false
+  } else {
+    password_error.value = ''
+  }
+
+  if (!confirmPassword.value) {
+    confirmPassword_error.value = 'Confirm password is required'
+    isValid = false
+  } else if (password.value !== confirmPassword.value) {
+    confirmPassword_error.value = 'Passwords do not match'
+    isValid = false
+  } else {
+    confirmPassword_error.value = ''
+  }
+
+  if (!isValid) {
+    return
+  }
+
   try {
     error.value = false
     errorMessage.value = ''
     loading.value = true
-
-    if (password.value !== confirmPassword.value) {
-      error.value = true
-      errorMessage.value = 'Passwords do not match'
-      return
-    }
 
     const response = await signUp({
       first_name: first_name.value,
@@ -168,4 +222,3 @@ const handleRegister = async () => {
   }
 }
 </script>
-

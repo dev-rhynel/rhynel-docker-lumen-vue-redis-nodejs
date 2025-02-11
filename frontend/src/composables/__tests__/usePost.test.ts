@@ -3,10 +3,10 @@ import {usePost} from '../usePost'
 import {useApi} from '../useApi'
 
 // Mock useApi
-const mockGet = vi.fn()
-const mockPost = vi.fn()
-const mockPut = vi.fn()
-const mockDelete = vi.fn()
+const mockGet = vi.fn().mockImplementation(() => Promise.resolve())
+const mockPost = vi.fn().mockImplementation(() => Promise.resolve())
+const mockPut = vi.fn().mockImplementation(() => Promise.resolve())
+const mockDelete = vi.fn().mockImplementation(() => Promise.resolve())
 
 vi.mock('../useApi', () => ({
   useApi: () => ({
@@ -17,8 +17,14 @@ vi.mock('../useApi', () => ({
   }),
 }))
 
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+  })
+}))
+
 describe('usePost', () => {
-  const mockPost = {
+  const mockPostResponse = {
     id: 1,
     title: 'Test Post',
     content: 'Test Content',
@@ -42,7 +48,7 @@ describe('usePost', () => {
 
   describe('getPosts', () => {
     it('should fetch all posts', async () => {
-      const mockResponse = {data: [mockPost]}
+      const mockResponse = {data: [mockPostResponse]}
       mockGet.mockResolvedValueOnce(mockResponse)
 
       const result = await getPosts()
@@ -54,7 +60,7 @@ describe('usePost', () => {
 
   describe('getPost', () => {
     it('should fetch a single post by id', async () => {
-      const mockResponse = {data: mockPost}
+      const mockResponse = {data: mockPostResponse}
       mockGet.mockResolvedValueOnce(mockResponse)
 
       const result = await getPost(1)
@@ -92,7 +98,7 @@ describe('usePost', () => {
 
   describe('deletePost', () => {
     it('should delete a post', async () => {
-      vi.mocked(_delete).mockResolvedValueOnce(undefined)
+      mockDelete.mockResolvedValueOnce(undefined)
 
       await deletePost(1)
 

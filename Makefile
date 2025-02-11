@@ -28,10 +28,10 @@ frontend-logs:
 backend-logs:
 	docker compose logs -f backend
 
-test-backend:
+test-be:
 	docker exec $(APP_CONTAINER) ./vendor/bin/phpunit
 
-test-frontend:
+test-fe:
 	docker exec $(FRONTEND_CONTAINER) npm run test:unit
 
-test: test-backend test-frontend
+test: test-be test-fe

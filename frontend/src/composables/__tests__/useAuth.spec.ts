@@ -2,14 +2,33 @@ import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
 import {useAuth} from '../useAuth'
 import {makeServer} from '@/mocks/server'
-import {useApi} from '../useApi'
+
+const mockPost = vi.fn()
+const mockGet = vi.fn()
+const mockDelete = vi.fn()
+const mockPush = vi.fn()
+const mockGetSessionToken = vi.fn()
+const mockSetSessionToken = vi.fn()
 
 vi.mock('../useApi', () => ({
   useApi: () => ({
-    _post: vi.fn(),
-    _get: vi.fn(),
-    _delete: vi.fn(),
-  }),
+    _post: mockPost,
+    _get: mockGet,
+    _delete: mockDelete
+  })
+}))
+
+vi.mock('vue-router', () => ({
+  useRouter: () => ({
+    push: mockPush
+  })
+}))
+
+vi.mock('../useSession', () => ({
+  useSession: () => ({
+    getSessionToken: mockGetSessionToken,
+    setSessionToken: mockSetSessionToken
+  })
 }))
 
 describe('useAuth', () => {
@@ -19,6 +38,8 @@ describe('useAuth', () => {
     setActivePinia(createPinia())
     server = makeServer({environment: 'test'})
     server.namespace = 'api/v1'
+    vi.clearAllMocks()
+    mockGetSessionToken.mockReturnValue(null)
   })
 
   afterEach(() => {
@@ -26,27 +47,20 @@ describe('useAuth', () => {
   })
 
   it('should successfully sign in with valid credentials', async () => {
-    server.post('/auth/login', (schema: any, request) => {
-      const attrs = JSON.parse(request.requestBody)
-      if (attrs.email === 'test@example.com' && attrs.password === 'password123') {
-        return {
-          success: true,
-          data: {
-            token: 'fake-token',
-            user: {
-              id: 1,
-              email: attrs.email,
-              firstName: 'Test',
-              lastName: 'User'
-            }
-          }
+    const mockResponse = {
+      success: true,
+      data: {
+        token: 'fake-token',
+        user: {
+          email: 'test@example.com',
+          firstName: 'Test',
+          lastName: 'User'
         }
       }
-      return new Response(401, {}, {
-        success: false,
-        message: 'Invalid credentials'
-      })
-    })
+    }
+    mockPost.mockResolvedValueOnce(mockResponse)
+    mockGetSessionToken.mockReturnValueOnce('fake-token')
+    mockGet.mockResolvedValueOnce({ data: mockResponse.data.user })
 
     const {signIn} = useAuth()
     const credentials = {
@@ -58,9 +72,16 @@ describe('useAuth', () => {
     expect(result.success).toBe(true)
     expect(result.data.user.email).toBe(credentials.email)
     expect(result.data.token).toBeDefined()
+    expect(mockPush).toHaveBeenCalledWith({ path: '/dashboard' })
   })
 
   it('should fail to sign in with invalid credentials', async () => {
+    const mockResponse = {
+      success: false,
+      message: 'Invalid credentials'
+    }
+    mockPost.mockResolvedValueOnce(mockResponse)
+
     const {signIn} = useAuth()
     const credentials = {
       email: 'wrong@example.com',
@@ -70,30 +91,26 @@ describe('useAuth', () => {
     const result = await signIn(credentials)
     expect(result.success).toBe(false)
     expect(result.message).toBe('Invalid credentials')
+    expect(mockPush).not.toHaveBeenCalled()
   })
 
   it('should successfully register a new user', async () => {
-    server.post('/auth/register', (schema: any, request) => {
-      const attrs = JSON.parse(request.requestBody)
-      if (attrs.email === 'test@example.com') {
-        return new Response(400, {}, {
-          success: false,
-          message: 'Email already exists'
-        })
-      }
-      return {
-        success: true,
-        data: {
-          token: 'fake-token',
-          user: {
-            id: 2,
-            ...attrs
-          }
+    const mockResponse = {
+      success: true,
+      data: {
+        token: 'fake-token',
+        user: {
+          email: 'newuser@example.com',
+          firstName: 'New',
+          lastName: 'User'
         }
       }
-    })
+    }
+    mockPost.mockResolvedValueOnce(mockResponse)
+    mockGetSessionToken.mockReturnValueOnce('fake-token')
+    mockGet.mockResolvedValueOnce({ data: mockResponse.data.user })
 
-    const {register} = useAuth()
+    const {signUp} = useAuth()
     const newUser = {
       email: 'newuser@example.com',
       password: 'password123',
@@ -101,15 +118,22 @@ describe('useAuth', () => {
       lastName: 'User',
     }
 
-    const result = await register(newUser)
+    const result = await signUp(newUser)
     expect(result.success).toBe(true)
     expect(result.data.user.email).toBe(newUser.email)
     expect(result.data.user.firstName).toBe(newUser.firstName)
     expect(result.data.token).toBeDefined()
+    expect(mockPush).toHaveBeenCalledWith({ path: '/dashboard' })
   })
 
   it('should fail to register with existing email', async () => {
-    const {register} = useAuth()
+    const mockResponse = {
+      success: false,
+      message: 'Email already exists'
+    }
+    mockPost.mockResolvedValueOnce(mockResponse)
+
+    const {signUp} = useAuth()
     const existingUser = {
       email: 'test@example.com',
       password: 'password123',
@@ -117,20 +141,24 @@ describe('useAuth', () => {
       lastName: 'User',
     }
 
-    const result = await register(existingUser)
+    const result = await signUp(existingUser)
     expect(result.success).toBe(false)
     expect(result.message).toBe('Email already exists')
+    expect(mockPush).not.toHaveBeenCalled()
   })
 
   it('should successfully sign out', async () => {
-    const {signOut} = useAuth()
-    server.post('/auth/logout', () => {
-      return {
-        success: true,
-        message: 'Successfully logged out'
-      }
+    mockGetSessionToken.mockReturnValueOnce('fake-token')
+    mockDelete.mockResolvedValueOnce({
+      success: true,
+      message: 'Successfully logged out'
     })
-    const result = await signOut()
-    expect(result.success).toBe(true)
+
+    const {signOut} = useAuth()
+    await signOut()
+
+    expect(mockDelete).toHaveBeenCalledWith(`auth/logout`)
+    expect(mockSetSessionToken).toHaveBeenCalledWith(null)
+    expect(mockPush).toHaveBeenCalledWith('/login')
   })
 })

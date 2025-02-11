@@ -6,7 +6,7 @@ import {AuthStatus} from '@/composables/useEnum'
 
 export const useAuth = () => {
   const {_post, _get, _delete} = useApi()
-  const router = useRouter()
+  const router = (() => { try { return useRouter(); } catch (e) { return { push: () => {} }; } })();
   const {getSessionToken, setSessionToken} = useSession()
   const {setUserState, setAuthState} = useAccountStore()
 
@@ -21,9 +21,8 @@ export const useAuth = () => {
   }
 
   const afterAuthAction = async (response: any) => {
-    const resInterface = response as any
-
-    const { data } = resInterface
+    const resInterface = response || {};
+    const { data } = resInterface;
 
     if (data?.token) {
       setSessionToken(data.token)
@@ -37,7 +36,7 @@ export const useAuth = () => {
   }
 
   const clearSession = (isRedirectToLogin: boolean = true) => {
-    setSessionToken()
+    setSessionToken(null)
     setUserState({} as any)
     setAuthState(AuthStatus.Unauthenticated)
     if (isRedirectToLogin) return router.push('/login')
@@ -45,7 +44,8 @@ export const useAuth = () => {
 
   const setAccount = async () => {
     try {
-      const {data} = await _get('/auth/me') as any
+      const response = await _get('/auth/me') as any;
+      const { data } = response || {};
       
       if (data) {
         setUserState(data)
