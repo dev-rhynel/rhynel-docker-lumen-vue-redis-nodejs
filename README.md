@@ -1,15 +1,26 @@
 # Full-Stack Application with Lumen, Vue.js, Redis, and Node.js
 
-A modern full-stack application using Laravel Lumen for the backend API, Vue.js for the frontend, Redis for caching, and Node.js, all containerized with Docker.
+A modern full-stack application using Laravel Lumen for the backend API, Vue.js 3 with TypeScript for the frontend, Redis for caching, and Node.js, all containerized with Docker. Features a clean, responsive UI with authentication, post management, and real-time updates.
 
 ## Tech Stack
 
-- **Backend**: Laravel Lumen (PHP Framework)
-- **Frontend**: Vue.js
-- **Caching**: Redis
-- **Runtime**: Node.js
-- **Containerization**: Docker
+### Backend
+- **API Framework**: Laravel Lumen (PHP)
 - **Database**: MySQL
+- **Caching**: Redis
+- **Authentication**: JWT
+
+### Frontend
+- **Framework**: Vue.js 3
+- **Language**: TypeScript
+- **State Management**: Composition API + Composables
+- **UI Components**: Custom-built with TailwindCSS
+- **HTTP Client**: Axios
+
+### Infrastructure
+- **Containerization**: Docker & Docker Compose
+- **Runtime**: Node.js
+- **Development Tools**: TypeScript, ESLint, Prettier
 
 ## Prerequisites
 
@@ -53,41 +64,121 @@ The application will be available at:
 
 ### Using Makefile Commands
 
-This project includes a Makefile for common operations:
+This project includes a Makefile for common operations. Here are all available commands:
+
 ```bash
-make up        # Start all containers
-make down      # Stop all containers
-make build     # Rebuild containers
-make logs      # View container logs
+# Container Management
+make start          # Start all containers in detached mode
+make stop           # Stop and remove all containers
+make build          # Rebuild all containers
+
+# Shell Access
+make bash           # Access backend container's bash shell
+make sql            # Access database container's shell
+make frontend-bash  # Access frontend container's shell
+
+# Logs
+make frontend-logs  # View frontend container logs
+make backend-logs   # View backend container logs
+
+# Testing
+make test           # Run PHP tests in the backend container
 ```
+
+These commands simplify common development tasks and container management operations.
+
+## Features
+
+### Authentication
+- JWT-based authentication
+- Secure login/logout functionality
+- Protected routes and API endpoints
+
+### Post Management
+- Create, read, update, and delete posts
+- Post status management (Pending, In Progress, Completed)
+- Validation and error handling
+- Real-time updates
+
+### UI Components
+- **BaseButton**: Versatile button component with variants:
+  - Primary (Green) - Main actions
+  - Error (Red) - Destructive actions
+  - Warning (Yellow) - Cautionary actions
+  - Info (Blue) - Informational actions
+  - Default (Gray) - Secondary actions
+  - Loading states with spinner
+  - Disabled states
+
+### Dashboard
+- User-specific dashboard
+- Post listing with pagination
+- Quick actions for post management
+- Responsive design for all screen sizes
 
 ## Project Structure
 
 ```
 .
-├── backend/           # Lumen API
-├── frontend/         # Vue.js application
-├── docker/           # Docker configuration files
-├── Dockerfile        # Backend Dockerfile
-├── Dockerfile.frontend # Frontend Dockerfile
-└── docker-compose.yml # Docker composition
+├── backend/                 # Lumen API
+│   ├── app/
+│   │   ├── Http/
+│   │   │   ├── Controllers/  # API endpoints logic
+│   │   │   ├── Requests/     # Form requests & validation
+│   │   │   └── Resources/    # API resources & transformers
+│   │   ├── Core/             # Core functionality
+│   │   │   └── Enums/        # Enumerations (e.g., PostStatusEnum)
+│   │   └── Repositories/     # Data access layer
+│   └── routes/              # API routes
+├── frontend/               # Vue.js 3 + TypeScript application
+│   ├── src/
+│   │   ├── components/     # Reusable Vue components
+│   │   │   └── form-fields/ # Form components (BaseButton, etc.)
+│   │   ├── composables/    # Shared composition logic
+│   │   ├── views/          # Page components
+│   │   └── types/          # TypeScript type definitions
+├── docker/                 # Docker configuration files
+├── Dockerfile             # Backend Dockerfile
+├── Dockerfile.frontend    # Frontend Dockerfile
+└── docker-compose.yml     # Docker composition
 ```
 
 ## Development
 
-- Backend API development:
-  - The Lumen API is located in the `backend` directory
-  - API endpoints are defined in `backend/routes/web.php`
-  - Controllers are in `backend/app/Http/Controllers`
+### Backend API Development
+- RESTful API endpoints in `backend/routes/web.php`
+- Controllers in `backend/app/Http/Controllers`
+- Form requests with validation in `backend/app/Http/Requests`
+- API resources for response transformation in `backend/app/Http/Resources`
+- Repository pattern for data access in `backend/app/Repositories`
+- Enums for type safety in `backend/app/Core/Enums`
 
-- Frontend development:
-  - Vue.js application is in the `frontend` directory
-  - Components are in `frontend/src/components`
-  - Views are in `frontend/src/views`
+### Frontend Development
+- Vue 3 Composition API with TypeScript
+- Reusable components in `frontend/src/components`
+- Page components in `frontend/src/views`
+- Shared logic in `frontend/src/composables`
+- Type definitions in `frontend/src/types`
+- TailwindCSS for styling
+
+### Best Practices
+- Type-safe development with TypeScript
+- Form validation on both frontend and backend
+- Proper error handling and user feedback
+- Responsive design principles
+- Component-based architecture
 
 ## API Documentation
 
 API documentation can be found at `/api/documentation` when running the backend server.
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/my-new-feature`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin feature/my-new-feature`
+5. Submit a pull request
 
 ## License
 
@@ -97,7 +188,9 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - Rhynel Algopera - Initial work
 
-## Acknowledgments
+## Support
+
+If you encounter any issues or have questions, please file an issue on the GitHub repository.
 
 - Laravel Lumen Team
 - Vue.js Team
