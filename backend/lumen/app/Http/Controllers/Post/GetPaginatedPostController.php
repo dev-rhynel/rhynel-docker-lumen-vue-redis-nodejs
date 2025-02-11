@@ -25,7 +25,7 @@ class GetPaginatedPostController extends Controller
         ]);
 
         // Get the authenticated user
-        $user = $request->user();
+        $user = auth()->user();
         
         if (!$user) {
             // Return empty paginated collection if no user

@@ -12,32 +12,35 @@ use App\Http\{
 use App\Repositories\RepoService;
 use App\Core\ApiResponse;
 use Illuminate\Http\JsonResponse;
-use App\Events\CompletedPost;
-use App\Core\Enums\PostStatusEnum;
+use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class UpdatePostController extends Controller
 {
     public function __invoke(int $postId, UpdatePostRequest $request, RepoService $repoService): JsonResponse
     {
-        $recentPost = $repoService->post()->findByIdentifier([
-             'id' => $postId,
-             'user_id' => $request->user()->id,
-         ]);
+        $user = auth()->user();
+
+        $post = $repoService->post()->find($postId);
+
+        if (!$post) {
+            return ApiResponse::error('Post not found', 404);
+        }
+
+        $payload = json_decode($request->getContent(), true) ?? [];
 
         $updatedPost = $repoService->post()->update([
-            'id' => $postId,
-            'user_id' => $request->user()->id,
-        ], $request->validated());
-
-        if ($recentPost->status !== PostStatusEnum::Completed
-        && $updatedPost->status === PostStatusEnum::Completed) {
-            CompletedPost::dispatch($request->user());
-        }
+            'id' => $post->id,
+            'user_id' => $user->id,
+        ], [
+            'title' => $payload['title'],
+            'content' => $payload['content'],
+            'user_id' => $user->id
+        ]);
 
         return ApiResponse::success(
             new PostResource($updatedPost),
             'Post updated successfully'
         );
-        
     }
-}
+}   

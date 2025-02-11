@@ -4,9 +4,9 @@ namespace App\Http\Requests\Post;
 
 use App\Core\Enums\PostStatusEnum;
 use Illuminate\Validation\Rules\Enum;
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Request;
 
-class UpdatePostRequest extends FormRequest
+class UpdatePostRequest extends Request
 {
     /**
      * Get the validation rules that apply to the request.
@@ -18,7 +18,23 @@ class UpdatePostRequest extends FormRequest
         return [
             'title' => ['required', 'string'],
             'content' => ['required', 'string'],
-            'status' => ['required', new Enum(PostStatusEnum::class)],
+            'status' => ['sometimes', 'required', new Enum(PostStatusEnum::class)],
         ];
+    }
+
+    /**
+     * Get the validated data from the request.
+     *
+     * @return array
+     */
+    public function validated()
+    {
+        $validator = app('validator')->make($this->all(), $this->rules());
+        
+        if ($validator->fails()) {
+            abort(422, 'The given data was invalid.');
+        }
+        
+        return $validator->validated();
     }
 }

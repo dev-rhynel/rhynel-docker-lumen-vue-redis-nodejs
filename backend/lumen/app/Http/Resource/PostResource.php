@@ -18,7 +18,6 @@ class PostResource extends AppJsonResource
             'id' => $this->id,
             'title' => $this->title,
             'content' => $this->content,
-            'created_by' => $this->created_by,
             'status' => $this->status->value,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

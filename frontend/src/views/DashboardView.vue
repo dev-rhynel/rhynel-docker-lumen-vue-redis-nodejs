@@ -4,7 +4,7 @@
       <div class="flex justify-between items-center mb-6">
         <h1 class="text-2xl font-bold text-gray-900">Welcome to {{ user?.name }}'s Dashboard</h1>
         <div class="flex items-center">
-          <BaseButton label="Logout" @click="handleLogout" :loading="logoutLoading" variant="secondary" />
+          <BaseButton label="Logout" @click="handleLogout" :loading="logoutLoading" variant="error" />
         </div>
       </div>
       <div v-if="user" class="text-lg text-gray-600">
@@ -46,13 +46,13 @@
               <td class="px-3 py-4 text-sm text-gray-500">
                 <div class="flex items-center space-x-3">
                   <button
-                    @click="handleEditPost(post)"
+                    @click="handleEditPost(post as any)"
                     class="text-blue-600 hover:text-blue-800"
                   >
                     Edit
                   </button>
                   <button
-                    @click="confirmDelete(post)"
+                    @click="confirmDelete(post as any)"
                     class="text-red-600 hover:text-red-800"
                     :disabled="deleteLoading"
                   >
@@ -101,7 +101,7 @@
             <div class="absolute right-0 top-0 pr-4 pt-4">
               <button
                 type="button"
-                @click="showPostModal.value = false"
+                @click="showPostModal = false"
                 class="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none"
               >
                 <span class="sr-only">Close</span>
@@ -143,12 +143,13 @@
                       :label="isEditMode ? 'Save Changes' : 'Create Post'"
                       :loading="postModalLoading"
                       class="w-full sm:w-auto sm:ml-3"
+                      variant="primary"
                     />
                     <BaseButton
                       type="button"
                       label="Cancel"
-                      variant="secondary"
-                      @click="showPostModal.value = false"
+                      variant="default"
+                      @click="showPostModal = false"
                       class="mt-3 w-full sm:w-auto sm:mt-0"
                     />
                   </div>
@@ -186,7 +187,7 @@
               <BaseButton
                 type="button"
                 label="Delete"
-                variant="danger"
+                variant="error"
                 :loading="deleteLoading"
                 @click="handleDeletePost"
                 class="w-full sm:w-auto sm:ml-3"
@@ -194,8 +195,8 @@
               <BaseButton
                 type="button"
                 label="Cancel"
-                variant="secondary"
-                @click="showDeleteModal.value = false"
+                variant="default"
+                @click="showDeleteModal = false"
                 class="mt-3 w-full sm:w-auto sm:mt-0"
                 :disabled="deleteLoading"
               />
@@ -254,7 +255,6 @@ const handleLogout = async () => {
   try {
     logoutLoading.value = true
     await signOut()
-    router.push({ name: 'login' })
   } catch (error) {
     console.error('Logout failed:', error)
   } finally {
@@ -290,18 +290,11 @@ const handleSubmitPost = async () => {
     }
 
     postModalLoading.value = true
-    console.log('Submitting post:', {
-      mode: isEditMode.value ? 'update' : 'create',
-      data: postForm.value,
-      editingId: editingPostId.value
-    })
-
+    
     if (isEditMode.value && editingPostId.value) {
-      const response = await updatePost(editingPostId.value, postForm.value)
-      console.log('Update response:', response)
+      await updatePost(editingPostId.value, postForm.value)
     } else {
-      const response = await createPost(postForm.value)
-      console.log('Create response:', response)
+      await createPost(postForm.value)
     }
 
     // Reset form and state before closing modal
@@ -309,13 +302,8 @@ const handleSubmitPost = async () => {
     editingPostId.value = null
     isEditMode.value = false
     showPostModal.value = false
-    await fetchPosts()
   } catch (error: any) {
-    console.error(`Failed to ${isEditMode.value ? 'update' : 'create'} post:`, {
-      error,
-      message: error.message,
-      data: error.response?.data
-    })
+    console.error(`Failed to ${isEditMode.value ? 'update' : 'create'} post:`, error)
   } finally {
     postModalLoading.value = false
   }

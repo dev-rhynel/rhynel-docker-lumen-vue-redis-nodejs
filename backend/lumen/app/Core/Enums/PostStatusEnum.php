@@ -2,7 +2,7 @@
 
 namespace App\Core\Enums;
 
-class TaskStatusEnum
+class PostStatusEnum
 {
     const Pending = 'pending';
     const InProgress = 'in_progress';

@@ -54,13 +54,25 @@ $app->configure('database');
 |--------------------------------------------------------------------------
 */
 
+// Global middleware
 $app->middleware([
     App\Http\Middleware\CorsMiddleware::class
 ]);
 
+// Route middleware
 $app->routeMiddleware([
     'auth' => App\Http\Middleware\Authenticate::class,
 ]);
+
+// Register auth service provider
+$app->register(App\Providers\AuthServiceProvider::class);
+
+// Register JWT auth service provider
+$app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
+
+// Configure auth
+$app->configure('auth');
+$app->configure('jwt');
 
 /*
 |--------------------------------------------------------------------------
