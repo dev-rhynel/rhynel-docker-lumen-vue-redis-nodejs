@@ -6,12 +6,8 @@ namespace App\Http\Controllers\Post;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Post\CreatePostRequest;
-use App\Http\Resources\PostResource;
-use App\Models\User;
 use App\Repositories\RepoService;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Validator;
 use App\Core\ApiResponse;
 
 class CreatePostController extends Controller
@@ -19,6 +15,10 @@ class CreatePostController extends Controller
     public function __invoke(CreatePostRequest $request, RepoService $repoService): JsonResponse
     {
         $user = $request->user();
+        
+        if (!$user) {
+            return ApiResponse::error('Unauthorized', 401);
+        }
         
         $post = $repoService->post()->create([
             'title' => $request->input('title'),

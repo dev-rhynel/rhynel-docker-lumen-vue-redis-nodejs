@@ -8,28 +8,47 @@ interface ApiErrorResponse {
 }
 
 export function useApi() {
-  const {getSessionToken} = useSession()
-  // const config = useRuntimeConfig()
+  const { getSessionToken } = useSession()
 
   const axiosInstance = axios.create({
-    // baseURL: config.public.apiBase,
+    baseURL: import.meta.env.VITE_BACKEND_API,
   })
 
   // Add request interceptor for auth token
   axiosInstance.interceptors.request.use(config => {
     const token = getSessionToken()
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`
+    console.log('token:', token);
+    
+    if (token && config.headers) {
+      config.headers['Authorization'] = `Bearer ${token}`
+      config.headers['Accept'] = 'application/json'
+      config.headers['Content-Type'] = 'application/json'
     }
     return config
+  }, error => {
+    return Promise.reject(error)
   })
 
-  const handleError = (error: AxiosError<ApiErrorResponse>): ApiErrorResponse => {
-    return {
-      message: error.message,
+  // Add response interceptor to handle auth errors
+  axiosInstance.interceptors.response.use(
+    response => response,
+    error => {
+      if (error.response?.status === 401) {
+        // Clear session on unauthorized
+        const { clearSessionToken } = useSession()
+        clearSessionToken()
+      }
+      return Promise.reject(error)
+    }
+  )
+
+  const _handleError = (error: AxiosError<ApiErrorResponse>): never => {
+    const errorResponse = {
+      message: error.response?.data?.message || error.message,
       status: error.response?.status,
       errors: error.response?.data?.errors || '',
     }
+    throw errorResponse
   }
 
   const _get = async <T>(url: string, config?: AxiosRequestConfig): Promise<T> => {
@@ -37,7 +56,7 @@ export function useApi() {
       const response = await axiosInstance.get<T>(url, config)
       return response.data
     } catch (error) {
-      throw handleError(error as AxiosError<ApiErrorResponse>)
+      throw _handleError(error as AxiosError<ApiErrorResponse>)
     }
   }
 
@@ -50,7 +69,7 @@ export function useApi() {
       const response = await axiosInstance.post<T>(url, payload, config)
       return response.data
     } catch (error) {
-      throw handleError(error as AxiosError<ApiErrorResponse>)
+      throw _handleError(error as AxiosError<ApiErrorResponse>)
     }
   }
 
@@ -58,7 +77,7 @@ export function useApi() {
     try {
       await axiosInstance.delete(url, config)
     } catch (error) {
-      throw handleError(error as AxiosError<ApiErrorResponse>)
+      throw _handleError(error as AxiosError<ApiErrorResponse>)
     }
   }
 
@@ -67,9 +86,9 @@ export function useApi() {
       const response = await axiosInstance.put<T>(url, payload, config)
       return response.data
     } catch (error) {
-      throw handleError(error as AxiosError<ApiErrorResponse>)
+      throw _handleError(error as AxiosError<ApiErrorResponse>)
     }
   }
 
-  return {_get, _post, _delete, _put, handleError}
+  return {_get, _post, _delete, _put, _handleError}
 }

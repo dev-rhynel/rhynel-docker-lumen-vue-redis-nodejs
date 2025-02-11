@@ -21,15 +21,14 @@ class AuthController extends Controller
 
     public function register(RegisterRequest $request)
     {
-        $data = json_decode($request->getContent(), true) ?? [];
-        $request->merge($data);
+        $payload = json_decode($request->getContent(), true) ?? [];
 
-        $this->validate($request, $request->rules());
+        $this->validate(new RegisterRequest($payload), $request->rules());
 
         $user = $this->repoService->user()->create([
-            'name' => $request->first_name . ' ' . $request->last_name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $payload['first_name'] . ' ' . $payload['last_name'],
+            'email' => $payload['email'],
+            'password' => Hash::make($payload['password']),
         ]);
 
         $token = Auth::login($user);
@@ -44,14 +43,19 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        $credentials = $request->only(['email', 'password']);
+        $payload = json_decode($request->getContent(), true) ?? [];
 
-        if (!$token = Auth::attempt($credentials)) {
+        $this->validate(new LoginRequest($payload), $request->rules());
+
+        if (!$token = Auth::attempt([
+            'email' => $payload['email'],
+            'password' => $payload['password']
+        ])) {
             return ApiResponse::error('Invalid credentials', 401);
         }
 
         return ApiResponse::success([
-            'message' => 'Successfully logged in',
+            'user' => Auth::user(),
             'token' => $token,
             'token_type' => 'bearer',
             'expires_in' => Auth::factory()->getTTL() * 60
@@ -60,7 +64,11 @@ class AuthController extends Controller
 
     public function me()
     {
-        return ApiResponse::success(Auth::user(), 'User retrieved successfully', 200);
+        $user = Auth::user();
+        if (!$user) {
+            return ApiResponse::error('Unauthorized', 401);
+        }
+        return ApiResponse::success($user, 'User retrieved successfully', 200);
     }
 
     public function logout()

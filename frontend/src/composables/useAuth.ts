@@ -11,26 +11,26 @@ export const useAuth = () => {
   const {setUserState, setAuthState} = useAccountStore()
 
   const signIn = async (payload: object) => {
-    const response = await _post('account/auth/signin', payload)
+    const response = await _post('auth/login', payload)
     return afterAuthAction(response)
   }
 
   const signUp = async (payload: object) => {
-    const response = await _post('account/auth/register', payload)
+    const response = await _post('auth/register', payload)
     return afterAuthAction(response)
   }
 
   const afterAuthAction = async (response: any) => {
-    const resInterface = response as Response
+    const resInterface = response as any
 
-    const {data} = response
+    const { data } = resInterface
 
     if (data?.token) {
       setSessionToken(data.token)
-
+      
       if (getSessionToken()) {
         await setAccount()
-        router.push({path: '/account/dashboard'})
+        router.push({path: '/dashboard'})
       }
     }
     return resInterface
@@ -40,29 +40,31 @@ export const useAuth = () => {
     setSessionToken()
     setUserState({} as any)
     setAuthState(AuthStatus.Unauthenticated)
-    if (isRedirectToLogin) return router.push('/account/auth')
+    if (isRedirectToLogin) return router.push('/login')
   }
 
-  const setAccount = async (key: string = '') => {
+  const setAccount = async () => {
     try {
-      const response = await _get(key ? `/account/profile?key=${key}` : '/account/profile')
-      const resInterface = response as ResponseInterface
-      const {data} = resInterface
-
+      const {data} = await _get('/auth/me') as any
+      
       if (data) {
-        if (data === 'ok') return
-        setUserState(data as any)
+        setUserState(data)
         setAuthState(AuthStatus.Authenticated)
+        return data
       }
+      
+      clearSession()
+      return null
     } catch (error) {
       clearSession()
+      return null
     }
   }
 
   const signOut = async () => {
     try {
       if (getSessionToken()) {
-        await _delete('account/auth/logout')
+        await _delete('auth/logout')
       }
     } finally {
       clearSession()

@@ -12,7 +12,7 @@ export const useAccountStore = defineStore(
     const isAuthenticated = computed(() => authState.value === AuthStatus.Authenticated)
 
     function setUserState(newUser: UserInterface) {
-      user.value = newUser
+      user.value = { ...newUser }
     }
 
     function setAuthState(newAuthState: AuthStatus = AuthStatus.Unauthenticated) {
@@ -28,6 +28,9 @@ export const useAccountStore = defineStore(
     }
   },
   {
-    persist: true,
+    persist: {
+      storage: window.localStorage,
+      paths: ['user', 'authState']
+    }
   }
 )

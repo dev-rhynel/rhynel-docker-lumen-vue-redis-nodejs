@@ -8,12 +8,24 @@ export const useSession = () => {
   }
 
   const setSessionToken = (token: string | null = null) => {
-    if (token) vCookies.set('token', token)
-    else vCookies.remove('token', '')
+    if (token) {
+      // Set token with 24 hour expiration
+      const expires = new Date()
+      expires.setHours(expires.getHours() + 24)
+      
+      vCookies.set('token', token, {
+        expires,
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'Lax'
+      })
+    } else {
+      vCookies.remove('token')
+    }
   }
 
   const clearSessionToken = () => {
-    vCookies.remove('token', '')
+    vCookies.remove('token')
   }
 
   return {
