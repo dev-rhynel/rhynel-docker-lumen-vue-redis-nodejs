@@ -47,7 +47,7 @@ A modern full-stack application using Laravel Lumen for the backend API, Vue.js 
 ## Running the Application
 
 The application will be available at:
-- Frontend: http://localhost:8080
+- Frontend: http://localhost:3080
 - Backend API: http://localhost:8000
 - Redis: localhost:6379 (internal access)
 
