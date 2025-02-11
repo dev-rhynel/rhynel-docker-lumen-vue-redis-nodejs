@@ -1,0 +1,5 @@
+{
+    "require": {
+        "illuminate/redis": "^8.83"
+    }
+}

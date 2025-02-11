@@ -1,0 +1,8 @@
+@import './base.css';
+@import './index.css';
+
+#app {
+  min-height: 100vh;
+  margin: 0 auto;
+  font-weight: normal;
+}
