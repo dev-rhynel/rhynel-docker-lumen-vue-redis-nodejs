@@ -43,23 +43,36 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        $payload = json_decode($request->getContent(), true) ?? [];
+        try {
+            \Log::info('Login attempt:', ['email' => $request->input('email')]);
+            
+            $payload = json_decode($request->getContent(), true) ?? [];
+            $this->validate(new LoginRequest($payload), $request->rules());
 
-        $this->validate(new LoginRequest($payload), $request->rules());
+            if (!$token = Auth::attempt([
+                'email' => $payload['email'],
+                'password' => $payload['password']
+            ])) {
+                \Log::warning('Login failed - Invalid credentials:', ['email' => $payload['email']]);
+                return ApiResponse::error('Invalid credentials', 401);
+            }
 
-        if (!$token = Auth::attempt([
-            'email' => $payload['email'],
-            'password' => $payload['password']
-        ])) {
-            return ApiResponse::error('Invalid credentials', 401);
+            $user = Auth::user();
+            \Log::info('Login successful:', ['user_id' => $user->id, 'email' => $user->email]);
+
+            return ApiResponse::success([
+                'user' => $user,
+                'token' => $token,
+                'token_type' => 'bearer',
+                'expires_in' => Auth::factory()->getTTL() * 60
+            ], 'Login successful', 200);
+        } catch (\Exception $e) {
+            \Log::error('Login error:', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return ApiResponse::error('Authentication failed: ' . $e->getMessage(), 401);
         }
-
-        return ApiResponse::success([
-            'user' => Auth::user(),
-            'token' => $token,
-            'token_type' => 'bearer',
-            'expires_in' => Auth::factory()->getTTL() * 60
-        ], 'Login successful', 200);
     }
 
     public function me()

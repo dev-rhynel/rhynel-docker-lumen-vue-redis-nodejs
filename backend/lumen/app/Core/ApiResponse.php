@@ -32,12 +32,23 @@ class ApiResponse
         return response()->json($response, $code);
     }
 
-    public static function error($message, $code = 404)
+    public static function error($message, $code = 404, $errors = [])
     {
         $response = [
             'success' => false,
             'message' => $message
         ];
+
+        if (!empty($errors)) {
+            $response['errors'] = $errors;
+        }
+
+        \Log::debug('API Error Response:', [
+            'message' => $message,
+            'code' => $code,
+            'errors' => $errors
+        ]);
+
         return response()->json($response, $code);
     }
 }

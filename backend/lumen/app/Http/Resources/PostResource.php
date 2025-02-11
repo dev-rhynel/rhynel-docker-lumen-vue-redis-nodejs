@@ -14,13 +14,15 @@ class PostResource extends JsonResource
      */
     public function toArray($request)
     {
+        $name = explode(' ', $this->user->name);
         return [
             'id' => $this->id,
             'title' => $this->title,
             'content' => $this->content,
             'user' => [
                 'id' => $this->user->id,
-                'name' => $this->user->name,
+                'first_name' => $name[0] ?? '',
+                'last_name' => $name[1] ?? '',
                 'email' => $this->user->email,
             ],
             'created_at' => $this->created_at,

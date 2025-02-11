@@ -17,15 +17,15 @@ use App\Core\Enums\PostStatusEnum;
 
 class UpdatePostController extends Controller
 {
-    public function __invoke(int $PostId, UpdatePostRequest $request, RepoService $repoService): JsonResponse
+    public function __invoke(int $postId, UpdatePostRequest $request, RepoService $repoService): JsonResponse
     {
-        $recentPost = $repoService->Post()->findByIdentifier([
-             'id' => $PostId,
+        $recentPost = $repoService->post()->findByIdentifier([
+             'id' => $postId,
              'user_id' => $request->user()->id,
          ]);
 
-        $updatedPost = $repoService->Post()->update([
-            'id' => $PostId,
+        $updatedPost = $repoService->post()->update([
+            'id' => $postId,
             'user_id' => $request->user()->id,
         ], $request->validated());
 

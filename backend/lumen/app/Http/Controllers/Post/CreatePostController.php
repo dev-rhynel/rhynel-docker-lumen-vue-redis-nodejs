@@ -14,18 +14,38 @@ class CreatePostController extends Controller
 {
     public function __invoke(CreatePostRequest $request, RepoService $repoService): JsonResponse
     {
-        $user = $request->user();
-        
-        if (!$user) {
-            return ApiResponse::error('Unauthorized', 401);
-        }
-        
-        $post = $repoService->post()->create([
-            'title' => $request->input('title'),
-            'content' => $request->input('content'),
-            'user_id' => $user->id,
-        ]);
+        try {
+            \Log::info('Creating post', [
+                'request' => $request->all(),
+                'user' => $request->user()
+            ]);
 
-        return ApiResponse::success($post, 'Post created successfully', 201);
+            $user = $request->user();
+            
+            if (!$user) {
+                \Log::warning('No authenticated user found');
+                return ApiResponse::error('Unauthorized', 401);
+            }
+            
+            $data = [
+                'title' => $request->input('title'),
+                'content' => $request->input('content'),
+                'user_id' => $user->id,
+            ];
+
+            \Log::info('Creating post with data', ['data' => $data]);
+            
+            $post = $repoService->post()->create($data);
+            
+            \Log::info('Post created successfully', ['post' => $post]);
+
+            return ApiResponse::success($post, 'Post created successfully', 201);
+        } catch (\Exception $e) {
+            \Log::error('Failed to create post', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return ApiResponse::error('Failed to create post: ' . $e->getMessage(), 500);
+        }
     }
 }

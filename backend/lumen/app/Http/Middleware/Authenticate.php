@@ -36,10 +36,59 @@ class Authenticate
      */
     public function handle(Request $request, Closure $next, $guard = null)
     {
-        if ($this->auth->guard($guard)->guest()) {
-            return response('Unauthorized.', 401);
-        }
+        try {
+            $token = $request->bearerToken();
+            \Log::info('Auth attempt:', [
+                'token' => $token,
+                'headers' => $request->headers->all(),
+                'guard' => $guard
+            ]);
 
-        return $next($request);
+            if (!$token) {
+                \Log::warning('No token provided');
+                return response()->json(['message' => 'Unauthorized - No token provided'], 401);
+            }
+
+            // Try to parse and validate the token
+            try {
+                $guard = $this->auth->guard($guard);
+                $guard->setToken($token);
+
+                if (!$guard->authenticate()) {
+                    \Log::warning('Token authentication failed');
+                    return response()->json(['message' => 'Unauthorized - Invalid token'], 401);
+                }
+
+                $user = $guard->user();
+                if (!$user) {
+                    \Log::warning('No user found for token');
+                    return response()->json(['message' => 'Unauthorized - User not found'], 401);
+                }
+
+                \Log::info('Successfully authenticated user:', [
+                    'user_id' => $user->id,
+                    'token_claims' => $guard->getPayload()->toArray()
+                ]);
+
+                return $next($request);
+
+            } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+                \Log::warning('Token has expired');
+                return response()->json(['message' => 'Token has expired'], 401);
+            } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+                \Log::warning('Token is invalid');
+                return response()->json(['message' => 'Token is invalid'], 401);
+            } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+                \Log::error('JWT error: ' . $e->getMessage());
+                return response()->json(['message' => 'Could not process token'], 401);
+            }
+
+        } catch (\Exception $e) {
+            \Log::error('Auth error: ' . $e->getMessage(), [
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['message' => 'Authentication failed: ' . $e->getMessage()], 401);
+        }
     }
 }

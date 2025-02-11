@@ -17,15 +17,28 @@ export function useApi() {
   // Add request interceptor for auth token
   axiosInstance.interceptors.request.use(config => {
     const token = getSessionToken()
-    console.log('token:', token);
-    
-    if (token && config.headers) {
-      config.headers['Authorization'] = `Bearer ${token}`
+    console.log('Using token for request:', { token, url: config.url })
+
+    if (!token) {
+      console.error('No authentication token available')
+      return Promise.reject(new Error('Authentication token is missing'))
+    }
+
+    if (config.headers) {
+      // Remove any existing Bearer prefix to avoid duplication
+      const cleanToken = token.replace('Bearer ', '')
+      config.headers['Authorization'] = `Bearer ${cleanToken}`
       config.headers['Accept'] = 'application/json'
       config.headers['Content-Type'] = 'application/json'
+
+      console.log('Request headers:', {
+        Authorization: config.headers['Authorization'],
+        url: config.url
+      })
     }
     return config
   }, error => {
+    console.error('Request interceptor error:', error)
     return Promise.reject(error)
   })
 

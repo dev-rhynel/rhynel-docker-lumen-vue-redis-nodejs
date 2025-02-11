@@ -77,11 +77,6 @@ $app->register(Tymon\JWTAuth\Providers\LumenServiceProvider::class);
 |--------------------------------------------------------------------------
 */
 
-$app->router->group([
-    'namespace' => 'App\Http\Controllers',
-], function ($router) {
-    require __DIR__.'/../routes/web.php';
-});
 $app->register(Illuminate\Redis\RedisServiceProvider::class);
 $app->register(App\Providers\RepositoryServiceProvider::class);
 $app->register(Illuminate\Cache\CacheServiceProvider::class);
@@ -92,9 +87,11 @@ $app->register(Illuminate\Cache\CacheServiceProvider::class);
 |--------------------------------------------------------------------------
 */
 
-$app->router->group([
-    'namespace' => null, // Remove the default namespace to use fully qualified class names
-], function ($router) {
+// Make sure Auth facade is registered
+$app->alias('auth', Illuminate\Auth\AuthManager::class);
+
+// Register routes without namespace prefix since we're using fully qualified class names
+$app->router->group([], function ($router) {
     require __DIR__.'/../routes/web.php';
 });
 

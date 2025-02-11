@@ -24,8 +24,18 @@ class GetPaginatedPostController extends Controller
             'itemsPerPage',
         ]);
 
-        // Since auth is disabled, get all posts without user filtering
-        $posts = $repoService->post()->index($selected, []);
+        // Get the authenticated user
+        $user = $request->user();
+        
+        if (!$user) {
+            // Return empty paginated collection if no user
+            return PostResource::collection(
+                new \Illuminate\Pagination\LengthAwarePaginator([], 0, $selected['itemsPerPage'] ?? 10)
+            );
+        }
+
+        // Get posts for authenticated user
+        $posts = $repoService->post()->index($selected, ['user_id' => $user->id]);
 
         return PostResource::collection($posts);
     }

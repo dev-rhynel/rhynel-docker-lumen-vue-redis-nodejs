@@ -28,8 +28,8 @@ $router->group(['prefix' => 'api/v1'], function () use ($router) {
         // Posts Routes
         $router->get('posts', GetPaginatedPostController::class);
         $router->post('posts', CreatePostController::class);
-        $router->get('posts/{id}', GetPostDetailsController::class);
-        $router->put('posts/{id}', UpdatePostController::class);
-        $router->delete('posts/{id}', DeletePostController::class);
+        $router->get('posts/{postId}', GetPostDetailsController::class);
+        $router->put('posts/{postId}', UpdatePostController::class);
+        $router->delete('posts/{postId}', DeletePostController::class);
     });
 });
