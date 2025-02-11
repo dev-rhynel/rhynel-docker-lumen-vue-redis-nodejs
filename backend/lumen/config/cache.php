@@ -3,6 +3,10 @@
 return [
     'default' => env('CACHE_DRIVER', 'redis'),
     'stores' => [
+        'array' => [
+            'driver' => 'array',
+            'serialize' => false,
+        ],
         'file' => [
             'driver' => 'file',
             'path' => storage_path('framework/cache'),

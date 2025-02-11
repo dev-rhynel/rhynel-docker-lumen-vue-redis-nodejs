@@ -1,7 +1,16 @@
-import {describe, it, expect, beforeEach, afterEach} from 'vitest'
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {setActivePinia, createPinia} from 'pinia'
 import {useAuth} from '../useAuth'
 import {makeServer} from '@/mocks/server'
+import {useApi} from '../useApi'
+
+vi.mock('../useApi', () => ({
+  useApi: () => ({
+    _post: vi.fn(),
+    _get: vi.fn(),
+    _delete: vi.fn(),
+  }),
+}))
 
 describe('useAuth', () => {
   let server: any
@@ -9,6 +18,7 @@ describe('useAuth', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     server = makeServer({environment: 'test'})
+    server.namespace = 'api/v1'
   })
 
   afterEach(() => {
@@ -16,6 +26,28 @@ describe('useAuth', () => {
   })
 
   it('should successfully sign in with valid credentials', async () => {
+    server.post('/auth/login', (schema: any, request) => {
+      const attrs = JSON.parse(request.requestBody)
+      if (attrs.email === 'test@example.com' && attrs.password === 'password123') {
+        return {
+          success: true,
+          data: {
+            token: 'fake-token',
+            user: {
+              id: 1,
+              email: attrs.email,
+              firstName: 'Test',
+              lastName: 'User'
+            }
+          }
+        }
+      }
+      return new Response(401, {}, {
+        success: false,
+        message: 'Invalid credentials'
+      })
+    })
+
     const {signIn} = useAuth()
     const credentials = {
       email: 'test@example.com',
@@ -41,6 +73,26 @@ describe('useAuth', () => {
   })
 
   it('should successfully register a new user', async () => {
+    server.post('/auth/register', (schema: any, request) => {
+      const attrs = JSON.parse(request.requestBody)
+      if (attrs.email === 'test@example.com') {
+        return new Response(400, {}, {
+          success: false,
+          message: 'Email already exists'
+        })
+      }
+      return {
+        success: true,
+        data: {
+          token: 'fake-token',
+          user: {
+            id: 2,
+            ...attrs
+          }
+        }
+      }
+    })
+
     const {register} = useAuth()
     const newUser = {
       email: 'newuser@example.com',
@@ -72,6 +124,12 @@ describe('useAuth', () => {
 
   it('should successfully sign out', async () => {
     const {signOut} = useAuth()
+    server.post('/auth/logout', () => {
+      return {
+        success: true,
+        message: 'Successfully logged out'
+      }
+    })
     const result = await signOut()
     expect(result.success).toBe(true)
   })

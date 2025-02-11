@@ -25,6 +25,13 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        
+        // Use array cache driver for testing
+        config(['cache.default' => 'array']);
+        
+        // Use SQLite for testing
+        config(['database.default' => 'sqlite']);
+        
         Artisan::call('migrate:fresh');
     }
 

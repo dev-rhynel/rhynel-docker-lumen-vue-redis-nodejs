@@ -4,6 +4,11 @@ return [
     'default' => env('DB_CONNECTION', 'mysql'),
     'migrations' => 'migrations',
     'connections' => [
+        'sqlite' => [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => '',
+        ],
         'mysql' => [
             'driver' => 'mysql',
             'host' => env('DB_HOST', '127.0.0.1'),

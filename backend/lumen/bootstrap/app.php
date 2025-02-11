@@ -21,6 +21,9 @@ $app = new Laravel\Lumen\Application(
 $app->withFacades();
 $app->withEloquent();
 
+// Register Log Service Provider
+$app->register(App\Providers\LogServiceProvider::class);
+
 /*
 |--------------------------------------------------------------------------
 | Register Container Bindings

@@ -3,12 +3,17 @@ import {usePost} from '../usePost'
 import {useApi} from '../useApi'
 
 // Mock useApi
+const mockGet = vi.fn()
+const mockPost = vi.fn()
+const mockPut = vi.fn()
+const mockDelete = vi.fn()
+
 vi.mock('../useApi', () => ({
   useApi: () => ({
-    _get: vi.fn(),
-    _post: vi.fn(),
-    _put: vi.fn(),
-    _delete: vi.fn(),
+    _get: mockGet,
+    _post: mockPost,
+    _put: mockPut,
+    _delete: mockDelete,
   }),
 }))
 
@@ -22,21 +27,27 @@ describe('usePost', () => {
     updatedAt: '2024-02-11T00:00:00Z',
   }
 
-  const {getPosts, getPost, createPost, updatePost, deletePost} = usePost()
-  const {_get, _post, _put, _delete} = useApi()
+  let getPosts: any, getPost: any, createPost: any, updatePost: any, deletePost: any
 
   beforeEach(() => {
     vi.clearAllMocks()
+
+    const postComposable = usePost()
+    getPosts = postComposable.getPosts
+    getPost = postComposable.getPost
+    createPost = postComposable.createPost
+    updatePost = postComposable.updatePost
+    deletePost = postComposable.deletePost
   })
 
   describe('getPosts', () => {
     it('should fetch all posts', async () => {
       const mockResponse = {data: [mockPost]}
-      vi.mocked(_get).mockResolvedValueOnce(mockResponse)
+      mockGet.mockResolvedValueOnce(mockResponse)
 
       const result = await getPosts()
 
-      expect(_get).toHaveBeenCalledWith('posts')
+      expect(mockGet).toHaveBeenCalledWith('posts')
       expect(result).toEqual(mockResponse)
     })
   })
@@ -44,11 +55,11 @@ describe('usePost', () => {
   describe('getPost', () => {
     it('should fetch a single post by id', async () => {
       const mockResponse = {data: mockPost}
-      vi.mocked(_get).mockResolvedValueOnce(mockResponse)
+      mockGet.mockResolvedValueOnce(mockResponse)
 
       const result = await getPost(1)
 
-      expect(_get).toHaveBeenCalledWith('posts/1')
+      expect(mockGet).toHaveBeenCalledWith('posts/1')
       expect(result).toEqual(mockResponse)
     })
   })
@@ -57,11 +68,11 @@ describe('usePost', () => {
     it('should create a new post', async () => {
       const newPost = {title: 'New Post', content: 'New Content'}
       const mockResponse = {data: {...newPost, id: 1}}
-      vi.mocked(_post).mockResolvedValueOnce(mockResponse)
+      mockPost.mockResolvedValueOnce(mockResponse)
 
       const result = await createPost(newPost)
 
-      expect(_post).toHaveBeenCalledWith('posts', newPost)
+      expect(mockPost).toHaveBeenCalledWith('posts', newPost)
       expect(result).toEqual(mockResponse)
     })
   })
@@ -70,11 +81,11 @@ describe('usePost', () => {
     it('should update an existing post', async () => {
       const updatedPost = {title: 'Updated Post', content: 'Updated Content'}
       const mockResponse = {data: {...updatedPost, id: 1}}
-      vi.mocked(_put).mockResolvedValueOnce(mockResponse)
+      mockPut.mockResolvedValueOnce(mockResponse)
 
       const result = await updatePost(1, updatedPost)
 
-      expect(_put).toHaveBeenCalledWith('posts/1', updatedPost)
+      expect(mockPut).toHaveBeenCalledWith('posts/1', updatedPost)
       expect(result).toEqual(mockResponse)
     })
   })
@@ -85,7 +96,7 @@ describe('usePost', () => {
 
       await deletePost(1)
 
-      expect(_delete).toHaveBeenCalledWith('posts/1')
+      expect(mockDelete).toHaveBeenCalledWith('posts/1')
     })
   })
 })

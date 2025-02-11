@@ -1,8 +1,19 @@
-import {describe, it, expect, beforeEach} from 'vitest'
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest'
 import {mount} from '@vue/test-utils'
 import {createPinia, setActivePinia} from 'pinia'
 import RegisterView from '../RegisterView.vue'
 import {makeServer} from '@/mocks/server'
+
+vi.mock('vue-router', () => ({
+  RouterLink: {
+    name: 'RouterLink',
+    template: '<a><slot/></a>'
+  }
+}))
+
+const mockRouter = {
+  push: vi.fn()
+}
 
 describe('RegisterView', () => {
   let server: any
@@ -17,29 +28,47 @@ describe('RegisterView', () => {
   })
 
   it('renders properly', () => {
-    const wrapper = mount(RegisterView)
-    expect(wrapper.find('h2').text()).toBe('Create Account')
+    const wrapper = mount(RegisterView, {
+      global: {
+        mocks: {
+          $router: mockRouter
+        }
+      }
+    })
+    expect(wrapper.find('h2').text()).toBe('Create an account')
     expect(wrapper.find('form').exists()).toBe(true)
     expect(wrapper.findAll('input')).toHaveLength(4) // firstName, lastName, email, password
   })
 
   it('shows validation errors for empty fields', async () => {
-    const wrapper = mount(RegisterView)
+    const wrapper = mount(RegisterView, {
+      global: {
+        mocks: {
+          $router: mockRouter
+        }
+      }
+    })
     await wrapper.find('form').trigger('submit')
 
     // Check if validation messages are shown
-    const errorMessages = wrapper.findAll('.error-message')
+    const errorMessages = wrapper.findAll('.text-red-800')
     expect(errorMessages.length).toBeGreaterThan(0)
   })
 
   it('handles successful registration', async () => {
-    const wrapper = mount(RegisterView)
+    const wrapper = mount(RegisterView, {
+      global: {
+        mocks: {
+          $router: mockRouter
+        }
+      }
+    })
 
     // Fill in the form
     await wrapper.find('input#firstName').setValue('John')
     await wrapper.find('input#lastName').setValue('Doe')
     await wrapper.find('input[type="email"]').setValue('john.doe@example.com')
-    await wrapper.find('input[type="password"]').setValue('password123')
+    await wrapper.find('#password').setValue('password123')
 
     // Submit the form
     await wrapper.find('form').trigger('submit')
@@ -52,13 +81,19 @@ describe('RegisterView', () => {
   })
 
   it('handles registration with existing email', async () => {
-    const wrapper = mount(RegisterView)
+    const wrapper = mount(RegisterView, {
+      global: {
+        mocks: {
+          $router: mockRouter
+        }
+      }
+    })
 
     // Fill in the form with an existing email
     await wrapper.find('input#firstName').setValue('Test')
     await wrapper.find('input#lastName').setValue('User')
-    await wrapper.find('input[type="email"]').setValue('test@example.com')
-    await wrapper.find('input[type="password"]').setValue('password123')
+    await wrapper.find('#email').setValue('test@example.com')
+    await wrapper.find('#password').setValue('password123')
 
     // Submit the form
     await wrapper.find('form').trigger('submit')

@@ -170,7 +170,27 @@ These commands simplify common development tasks and container management operat
 
 ## API Documentation
 
-API documentation can be found at `/api/documentation` when running the backend server.
+### Postman Collection
+A complete Postman collection documenting all API endpoints is available at:
+[API Documentation](https://documenter.getpostman.com/view/17221080/2sAYXBGKS7)
+
+The collection includes:
+- Authentication endpoints (login, register)
+- Post management (CRUD operations)
+- User management
+- Health check endpoints
+
+Each endpoint includes:
+- Request/Response examples
+- Required headers
+- Request body schemas
+- Response schemas
+- Authentication requirements
+
+### Local Documentation
+When running the backend server, additional API documentation can be found at:
+- Lumen Swagger UI: `/api/documentation`
+- Node.js API docs: `/api/docs`
 
 ## Contributing
 
